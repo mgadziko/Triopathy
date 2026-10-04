@@ -12,6 +12,9 @@
 		A10000000000000000000003 /* ConversationEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000013 /* ConversationEngine.swift */; };
 		A10000000000000000000004 /* HermesService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000014 /* HermesService.swift */; };
 		A10000000000000000000005 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000015 /* Assets.xcassets */; };
+		A10000000000000000000006 /* OpenAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000016 /* OpenAIService.swift */; };
+		A10000000000000000000007 /* CodexSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000017 /* CodexSetupView.swift */; };
+		A10000000000000000000008 /* ChatGPTPlanService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000018 /* ChatGPTPlanService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -21,6 +24,9 @@
 		A10000000000000000000013 /* ConversationEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConversationEngine.swift; sourceTree = "<group>"; };
 		A10000000000000000000014 /* HermesService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HermesService.swift; sourceTree = "<group>"; };
 		A10000000000000000000015 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A10000000000000000000016 /* OpenAIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIService.swift; sourceTree = "<group>"; };
+		A10000000000000000000017 /* CodexSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexSetupView.swift; sourceTree = "<group>"; };
+		A10000000000000000000018 /* ChatGPTPlanService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatGPTPlanService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -49,6 +55,9 @@
 				A10000000000000000000012 /* ContentView.swift */,
 				A10000000000000000000013 /* ConversationEngine.swift */,
 				A10000000000000000000014 /* HermesService.swift */,
+				A10000000000000000000016 /* OpenAIService.swift */,
+				A10000000000000000000017 /* CodexSetupView.swift */,
+				A10000000000000000000018 /* ChatGPTPlanService.swift */,
 				A10000000000000000000015 /* Assets.xcassets */,
 			);
 			path = Triopathy;
@@ -135,6 +144,9 @@
 				A10000000000000000000002 /* ContentView.swift in Sources */,
 				A10000000000000000000003 /* ConversationEngine.swift in Sources */,
 				A10000000000000000000004 /* HermesService.swift in Sources */,
+				A10000000000000000000006 /* OpenAIService.swift in Sources */,
+				A10000000000000000000007 /* CodexSetupView.swift in Sources */,
+				A10000000000000000000008 /* ChatGPTPlanService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -208,8 +220,9 @@
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = NO;
 				ENABLE_PREVIEWS = YES;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_KEY_CFBundleDisplayName = Triopathy;
+				INFOPLIST_FILE = Triopathy/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
@@ -232,8 +245,9 @@
 				DEVELOPMENT_TEAM = "";
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = NO;
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_KEY_CFBundleDisplayName = Triopathy;
+				INFOPLIST_FILE = Triopathy/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;

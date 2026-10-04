@@ -2,6 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @ObservedObject var viewModel: TriopathyViewModel
+    let discussionFontSize: Double
 
     var body: some View {
         VStack(spacing: 0) {
@@ -19,12 +20,15 @@ struct ContentView: View {
             VStack(alignment: .leading, spacing: 5) {
                 Text("Triopathy")
                     .font(.largeTitle.weight(.bold))
-                Text("A three-way conversation among your named local Hermes profiles")
+                Text("A conversation among your local Hermes profiles and optional ChatGPT plan")
                     .foregroundStyle(.secondary)
                 HStack(spacing: 8) {
                     participantBadge(.whiteLotus)
                     participantBadge(.blackLotus)
                     participantBadge(.greenLotus)
+                    participantBadge(.cheyenne)
+                    participantBadge(.hal)
+                    participantBadge(.codex)
                 }
             }
             Spacer()
@@ -40,16 +44,17 @@ struct ContentView: View {
 
     private func participantBadge(_ speaker: ConversationMessage.Speaker) -> some View {
         HStack(spacing: 5) {
-            Circle().fill(color(for: speaker)).frame(width: 8, height: 8)
+            Circle().fill(viewModel.isAvailable(speaker) ? color(for: speaker) : .gray).frame(width: 8, height: 8)
             Text(viewModel.speakerName(speaker))
-            Text("\(viewModel.counts[speaker, default: 0])")
+            Text(viewModel.isAvailable(speaker) ? "\(viewModel.counts[speaker, default: 0])" : "Offline")
                 .foregroundStyle(.secondary)
         }
         .font(.caption)
         .padding(.horizontal, 9)
         .padding(.vertical, 5)
-        .background(color(for: speaker).opacity(0.13))
+        .background((viewModel.isAvailable(speaker) ? color(for: speaker) : .gray).opacity(0.13))
         .clipShape(Capsule())
+        .opacity(viewModel.isAvailable(speaker) ? 1 : 0.55)
     }
 
     private var transcript: some View {
@@ -57,7 +62,7 @@ struct ContentView: View {
             ScrollView {
                 LazyVStack(spacing: 12) {
                     if viewModel.messages.isEmpty {
-                        ContentUnavailableView("Begin with a seed", systemImage: "bubble.left.and.bubble.right", description: Text("Triopathy will let WhiteLotus, BlackLotus, and GreenLotus take turns responding."))
+                        ContentUnavailableView("Begin with a seed", systemImage: "bubble.left.and.bubble.right", description: Text("Triopathy will let every reachable participant take a turn."))
                             .padding(.top, 100)
                     }
                     ForEach(viewModel.messages) { message in
@@ -82,6 +87,7 @@ struct ContentView: View {
                 .font(.caption.weight(.semibold))
                 .foregroundStyle(color(for: message.speaker))
             Text(message.text.isEmpty ? "Thinking…" : message.text)
+                .font(.system(size: discussionFontSize))
                 .textSelection(.enabled)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -110,10 +116,14 @@ struct ContentView: View {
                 }
                 .frame(width: 190)
                 .disabled(viewModel.isRunning)
-                Text("Each turn uses `hermes -p` and the named profile’s current configuration.")
+                Text("Local participants use their live models; Codex can use your connected ChatGPT plan.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
+                Button("Refresh Hosts") { viewModel.refreshAvailability() }
+                    .disabled(viewModel.isRunning)
+                Button("Configure Codex…") { viewModel.showCodexSetup = true }
+                    .disabled(viewModel.isRunning)
                 Button("Save Transcript…") { viewModel.saveTranscript() }
                     .disabled(viewModel.messages.isEmpty || viewModel.isRunning)
                 Button("Clear") { viewModel.clearConversation() }
@@ -136,11 +146,14 @@ struct ContentView: View {
         case .whiteLotus: return .purple
         case .blackLotus: return .blue
         case .greenLotus: return .green
+        case .cheyenne: return .cyan
+        case .hal: return .indigo
+        case .codex: return .teal
         case .system: return .orange
         }
     }
 }
 
 #Preview {
-    ContentView(viewModel: TriopathyViewModel())
+    ContentView(viewModel: TriopathyViewModel(), discussionFontSize: 16)
 }
