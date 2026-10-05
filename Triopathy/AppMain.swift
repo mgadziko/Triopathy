@@ -16,6 +16,23 @@ struct TriopathyApp: App {
         .windowResizability(.contentSize)
         .commands {
             CommandGroup(after: .newItem) {
+                Button("Load Context Seed…") { viewModel.loadContextSeed() }
+                    .keyboardShortcut("o", modifiers: [.command, .shift])
+                    .disabled(viewModel.isRunning)
+
+                Button("Remove Loaded Context") { viewModel.clearLoadedContext() }
+                    .disabled(viewModel.isRunning || viewModel.loadedSeedContext == nil)
+
+                Divider()
+
+                Button("Save as JSON…") { viewModel.saveTranscriptAsJSON() }
+                    .disabled(viewModel.isRunning || viewModel.messages.isEmpty)
+
+                Button("Save as TXT…") { viewModel.saveTranscriptAsText() }
+                    .disabled(viewModel.isRunning || viewModel.messages.isEmpty)
+
+                Divider()
+
                 Button("Clear Conversation") { viewModel.clearConversation() }
                     .keyboardShortcut(.delete, modifiers: [.command])
                     .disabled(viewModel.isRunning || viewModel.messages.isEmpty)

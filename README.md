@@ -2,6 +2,7 @@
 
 Triopathy is a native macOS SwiftUI conversation room for local Hermes profiles and an optional ChatGPT-plan participant.
 
+- `hermes-local`
 - `hermes-whitelotus`
 - `hermes-blacklotus`
 - `hermes-greenlotus`
@@ -17,9 +18,10 @@ The existing API-key form remains an optional fallback only. A connected ChatGPT
 ## Use
 
 1. Open `Triopathy.xcodeproj` in Xcode or build from Terminal.
-2. Enter a conversation seed.
+2. Enter a conversation seed. Optionally choose **File > Load Context Seed…** to import a UTF-8 `.txt` or `.json` document. JSON is formatted for readability; the loaded document is treated as reference history, and every participant is told to recognize any contributions labeled with its own name.
 3. Choose the number of rounds; each participant speaks once per round.
 4. Click **Begin Conversation**.
+5. Use **File > Save as JSON…** for structured transcript data or **File > Save as TXT…** for a readable transcript.
 
 The app does not change any Hermes profile or inference configuration. It uses whatever live endpoint and model each named profile is configured to use at the moment a turn begins.
 

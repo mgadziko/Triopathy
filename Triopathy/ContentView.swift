@@ -23,6 +23,7 @@ struct ContentView: View {
                 Text("A conversation among your local Hermes profiles and optional ChatGPT plan")
                     .foregroundStyle(.secondary)
                 HStack(spacing: 8) {
+                    participantBadge(.local)
                     participantBadge(.whiteLotus)
                     participantBadge(.blackLotus)
                     participantBadge(.greenLotus)
@@ -101,6 +102,17 @@ struct ContentView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Conversation seed")
                 .font(.headline)
+            if let loadedContext = viewModel.loadedSeedContext {
+                HStack(spacing: 8) {
+                    Label("Loaded context: \(loadedContext.filename)", systemImage: "doc.text")
+                    Text("\(loadedContext.text.count.formatted()) characters")
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Button("Remove") { viewModel.clearLoadedContext() }
+                        .disabled(viewModel.isRunning)
+                }
+                .font(.caption)
+            }
             TextEditor(text: $viewModel.seed)
                 .font(.body)
                 .frame(height: 82)
@@ -124,8 +136,6 @@ struct ContentView: View {
                     .disabled(viewModel.isRunning)
                 Button("Configure Codex…") { viewModel.showCodexSetup = true }
                     .disabled(viewModel.isRunning)
-                Button("Save Transcript…") { viewModel.saveTranscript() }
-                    .disabled(viewModel.messages.isEmpty || viewModel.isRunning)
                 Button("Clear") { viewModel.clearConversation() }
                     .disabled(viewModel.messages.isEmpty || viewModel.isRunning)
                 if viewModel.isRunning {
@@ -143,6 +153,7 @@ struct ContentView: View {
 
     private func color(for speaker: ConversationMessage.Speaker) -> Color {
         switch speaker {
+        case .local: return .mint
         case .whiteLotus: return .purple
         case .blackLotus: return .blue
         case .greenLotus: return .green

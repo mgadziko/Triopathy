@@ -2,6 +2,7 @@ import Foundation
 import Network
 
 enum HermesProfile: String, CaseIterable, Identifiable {
+    case local = "local"
     case whiteLotus = "whitelotus"
     case blackLotus = "blacklotus"
     case greenLotus = "greenlotus"
@@ -12,6 +13,7 @@ enum HermesProfile: String, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
+        case .local: return "Hermes Local"
         case .whiteLotus: return "WhiteLotus"
         case .blackLotus: return "BlackLotus"
         case .greenLotus: return "GreenLotus"
@@ -46,8 +48,14 @@ enum HermesServiceError: LocalizedError {
 }
 
 private struct ProfileBackend {
+    enum ProtocolStyle {
+        case openAIChat
+        case ollamaNativeChat
+    }
+
     let apiURL: URL
     let model: String
+    let protocolStyle: ProtocolStyle
 }
 
 private struct ConversationRequest: Encodable {
@@ -93,6 +101,43 @@ private struct ConversationResponse: Decodable {
     }
 
     let choices: [Choice]
+}
+
+private struct NativeOllamaConversationRequest: Encodable {
+    struct Message: Encodable {
+        let role: String
+        let content: String
+    }
+
+    struct Options: Encodable {
+        let temperature: Double
+        let numPredict: Int
+
+        enum CodingKeys: String, CodingKey {
+            case temperature
+            case numPredict = "num_predict"
+        }
+    }
+
+    let model: String
+    let messages: [Message]
+    let stream: Bool
+    let think: Bool
+    let options: Options
+}
+
+private struct NativeOllamaConversationResponse: Decodable {
+    struct Message: Decodable {
+        let content: String?
+    }
+
+    let message: Message
+    let doneReason: String?
+
+    enum CodingKeys: String, CodingKey {
+        case message
+        case doneReason = "done_reason"
+    }
 }
 
 private final class RequestBox {
@@ -154,15 +199,32 @@ final class HermesService {
 
     func respond(profile: HermesProfile, prompt: String) async throws -> String {
         let backend = try backend(for: profile)
-        let requestBody = ConversationRequest(
-            model: backend.model,
-            messages: [.init(role: "user", content: prompt)],
-            maxTokens: profile.triopathyOutputTokenLimit,
-            temperature: 0.75,
-            chatTemplateKwargs: ["enable_thinking": false]
-        )
-
-        let data = try await directRequest(to: backend.apiURL, body: JSONEncoder().encode(requestBody), profile: profile)
+        let data: Data
+        switch backend.protocolStyle {
+        case .openAIChat:
+            let requestBody = ConversationRequest(
+                model: backend.model,
+                messages: [.init(role: "user", content: prompt)],
+                maxTokens: profile.triopathyOutputTokenLimit,
+                temperature: 0.75,
+                chatTemplateKwargs: ["enable_thinking": false]
+            )
+            data = try await directRequest(to: backend.apiURL, body: JSONEncoder().encode(requestBody), profile: profile)
+        case .ollamaNativeChat:
+            let requestBody = NativeOllamaConversationRequest(
+                model: backend.model,
+                messages: [.init(role: "user", content: prompt)],
+                stream: false,
+                think: false,
+                options: .init(temperature: 0.75, numPredict: profile.triopathyOutputTokenLimit)
+            )
+            data = try await directRequest(to: backend.apiURL, body: JSONEncoder().encode(requestBody), profile: profile)
+            let decoded = try JSONDecoder().decode(NativeOllamaConversationResponse.self, from: data)
+            let response = decoded.message.content?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            if !response.isEmpty { return response }
+            let finishDescription = decoded.doneReason.map { " (finish reason: \($0))" } ?? ""
+            throw HermesServiceError.noResponse(profile: profile, detail: "The model returned no final text\(finishDescription).")
+        }
 
         let decoded = try JSONDecoder().decode(ConversationResponse.self, from: data)
         guard let choice = decoded.choices.first else {
@@ -422,10 +484,16 @@ final class HermesService {
             }
         }
 
-        guard let api, let model, var url = URL(string: api) else {
+        guard let api, let model, let baseURL = URL(string: api) else {
             throw HermesServiceError.profileConfigurationUnavailable(profile)
         }
+        if profile == .hal {
+            var url = baseURL.deletingLastPathComponent()
+            url.appendPathComponent("api/chat")
+            return ProfileBackend(apiURL: url, model: model, protocolStyle: .ollamaNativeChat)
+        }
+        var url = baseURL
         url.appendPathComponent("chat/completions")
-        return ProfileBackend(apiURL: url, model: model)
+        return ProfileBackend(apiURL: url, model: model, protocolStyle: .openAIChat)
     }
 }
