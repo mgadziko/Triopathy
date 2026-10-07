@@ -2,3 +2,8 @@
 DerivedData/
 build/
 dist/
+**/bin/
+**/obj/
+work/
+windows/publish/
+.vs/

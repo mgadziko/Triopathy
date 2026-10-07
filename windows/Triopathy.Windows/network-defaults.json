@@ -1,0 +1,8 @@
+[
+  { "id": "local", "endpoint": "http://192.168.4.164:11434/v1/chat/completions", "model": "qwen3-coder:q8-64k", "protocol": "openai" },
+  { "id": "whitelotus", "endpoint": "http://192.168.4.165:11435/v1/chat/completions", "model": "qwen3.8-27b-q4km", "protocol": "openai" },
+  { "id": "blacklotus", "endpoint": "http://192.168.4.150:11435/v1/chat/completions", "model": "qwen3.8-27b-q4km", "protocol": "openai" },
+  { "id": "greenlotus", "endpoint": "http://192.168.4.57:11435/v1/chat/completions", "model": "greenlotus-qwen", "protocol": "openai" },
+  { "id": "cheyenne", "endpoint": "http://192.168.4.101:11434/v1/chat/completions", "model": "qwen3-coder:latest", "protocol": "openai" },
+  { "id": "hal", "endpoint": "http://192.168.4.78:11434/api/chat", "model": "qwen-coder:latest", "protocol": "ollama" }
+]

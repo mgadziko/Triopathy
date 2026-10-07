@@ -25,7 +25,11 @@ The existing API-key form remains an optional fallback only. A connected ChatGPT
 
 The app does not change any Hermes profile or inference configuration. It uses whatever live endpoint and model each named profile is configured to use at the moment a turn begins.
 
-## Build
+## Windows version
+
+A native C# / WPF Windows port is in `windows/`. It includes the conversation room, Hermes profile and endpoint configuration, ChatGPT-plan sign-in, API-key fallback, encrypted Windows credential storage, context loading, transcript export, and cancellation. See [Windows setup and build instructions](windows/README.md).
+
+## macOS build
 
 ```sh
 xcodebuild -project Triopathy.xcodeproj -scheme Triopathy -configuration Debug -destination 'platform=macOS,arch=arm64' CODE_SIGNING_ALLOWED=NO build

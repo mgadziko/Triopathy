@@ -1,0 +1,39 @@
+<Window x:Class="Triopathy.Windows.ConnectionsWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Style="{StaticResource {x:Type Window}}" Title="Triopathy · Connections" Width="980" Height="850" MinWidth="920" MinHeight="720" WindowStartupLocation="CenterOwner">
+ <DockPanel Margin="26">
+  <StackPanel DockPanel.Dock="Bottom" Margin="0,16,0,0"><TextBlock x:Name="Feedback" TextWrapping="Wrap" Foreground="#8F4D30" Margin="0,0,0,10"/><DockPanel><TextBlock Text="Hermes configuration is read only. Credentials are encrypted for your Windows account." FontSize="11" Foreground="{StaticResource Muted}" VerticalAlignment="Center"/><StackPanel Orientation="Horizontal" HorizontalAlignment="Right"><Button x:Name="CancelSignIn" Content="Cancel sign-in" Click="CancelSignInClick" Visibility="Collapsed"/><Button Content="Close" Click="CloseClick"/><Button x:Name="ApplyButton" Content="Save connections" Click="ApplyClick" Background="#315F55" Foreground="White" Margin="0"/></StackPanel></DockPanel></StackPanel>
+  <ScrollViewer x:Name="ConnectionsScroll" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+   <StackPanel Margin="0,0,12,0">
+    <TextBlock Text="Connections" FontSize="28" FontWeight="SemiBold"/><TextBlock Text="Choose which voices join the room." Foreground="{StaticResource Muted}" Margin="0,6,0,22"/>
+    <TextBlock Text="HERMES CONFIGURATION" Style="{StaticResource SectionLabel}"/>
+    <TextBlock Text="Profile folder — supports Windows paths and WSL network paths" Foreground="{StaticResource Muted}" FontSize="12"/>
+    <DockPanel Margin="0,6,0,12"><Button DockPanel.Dock="Right" Content="Browse…" Click="BrowseProfilesClick" Margin="8,0,0,0"/><TextBox Text="{Binding ProfilesDirectory, UpdateSourceTrigger=PropertyChanged}"/></DockPanel>
+    <TextBlock Text="Local profile file — used for Hermes Local when a named local profile is absent" Foreground="{StaticResource Muted}" FontSize="12"/>
+    <DockPanel Margin="0,6,0,14"><Button DockPanel.Dock="Right" Content="Browse…" Click="BrowseLocalClick" Margin="8,0,0,0"/><TextBox Text="{Binding LocalConfigFile, UpdateSourceTrigger=PropertyChanged}"/></DockPanel>
+    <TextBlock Text="Leave an endpoint blank to use its live Hermes profile. An explicit endpoint and model override that profile." TextWrapping="Wrap" Foreground="{StaticResource Muted}" FontSize="12" Margin="0,0,0,10"/>
+    <DataGrid x:Name="ParticipantGrid" ItemsSource="{Binding Participants}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" CanUserSortColumns="False" HeadersVisibility="Column" RowHeight="42" GridLinesVisibility="Horizontal" Background="White" BorderBrush="#D6DDD7" SelectionUnit="Cell" Margin="0,0,0,22">
+     <DataGrid.Columns>
+      <DataGridCheckBoxColumn Header="Join" Binding="{Binding Enabled}" Width="48"/>
+      <DataGridTextColumn Header="Participant" Binding="{Binding Name}" IsReadOnly="True" Width="120"/>
+      <DataGridTextColumn Header="Endpoint (HTTP / HTTPS)" Binding="{Binding Endpoint, UpdateSourceTrigger=PropertyChanged}" Width="330"/>
+      <DataGridTextColumn Header="Model" Binding="{Binding Model, UpdateSourceTrigger=PropertyChanged}" Width="170"/>
+      <DataGridComboBoxColumn Header="Protocol" x:Name="ProtocolColumn" SelectedItemBinding="{Binding Protocol}" Width="96"/>
+     </DataGrid.Columns>
+    </DataGrid>
+    <Separator Margin="0,0,0,18"/>
+    <CheckBox Content="Include Codex in conversations" IsChecked="{Binding CodexEnabled}" FontWeight="SemiBold" Margin="0,0,0,14"/>
+    <Border Background="White" BorderBrush="#D6DDD7" BorderThickness="1" CornerRadius="8" Padding="16" Margin="0,0,0,16"><StackPanel>
+     <TextBlock Text="CHATGPT PLAN" Style="{StaticResource SectionLabel}"/><TextBlock x:Name="AccountLabel" Text="Not connected" Margin="0,0,0,12"/>
+     <WrapPanel><Button x:Name="ConnectButton" Content="Continue with ChatGPT" Click="ConnectClick" Background="#243835" Foreground="White"/><Button x:Name="DisconnectButton" Content="Disconnect" Click="DisconnectClick"/><Button x:Name="ModelsButton" Content="Refresh models" Click="ModelsClick"/></WrapPanel>
+     <DockPanel Margin="0,12,0,0"><TextBlock Text="Model" DockPanel.Dock="Left" Width="68" VerticalAlignment="Center"/><ComboBox x:Name="PlanModels" DisplayMemberPath="DisplayName" SelectedValuePath="Slug" MinWidth="240"/></DockPanel>
+     <TextBlock Text="A connected ChatGPT plan takes priority over an API key. Browser approval is required to connect." TextWrapping="Wrap" FontSize="12" Foreground="{StaticResource Muted}" Margin="0,10,0,0"/>
+    </StackPanel></Border>
+    <Border Background="White" BorderBrush="#D6DDD7" BorderThickness="1" CornerRadius="8" Padding="16"><StackPanel>
+     <TextBlock Text="OPTIONAL API KEY FALLBACK" Style="{StaticResource SectionLabel}"/><TextBlock x:Name="KeyLabel" Foreground="{StaticResource Muted}" FontSize="12" Margin="0,0,0,10"/>
+     <DockPanel><TextBlock Text="API key" Width="68" DockPanel.Dock="Left" VerticalAlignment="Center"/><PasswordBox x:Name="ApiKey"/></DockPanel>
+     <DockPanel Margin="0,10,0,0"><TextBlock Text="Model" Width="68" DockPanel.Dock="Left" VerticalAlignment="Center"/><TextBox Text="{Binding ApiModel, UpdateSourceTrigger=PropertyChanged}"/></DockPanel>
+     <Button x:Name="RemoveKeyButton" Content="Remove saved API key" Click="RemoveKeyClick" HorizontalAlignment="Left" Margin="0,12,0,0"/>
+    </StackPanel></Border>
+   </StackPanel>
+  </ScrollViewer>
+ </DockPanel>
+</Window>
