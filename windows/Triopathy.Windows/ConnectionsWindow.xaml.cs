@@ -39,7 +39,7 @@ public partial class ConnectionsWindow : Window
     private void BrowseProfilesClick(object sender, RoutedEventArgs e)
     { var dialog = new OpenFolderDialog { Title = "Choose Hermes profiles folder" }; if (dialog.ShowDialog(this) == true) { edit.ProfilesDirectory = dialog.FolderName; DataContext = null; DataContext = edit; } }
     private void BrowseLocalClick(object sender, RoutedEventArgs e)
-    { var dialog = new OpenFileDialog { Title = "Choose Hermes Local configuration", Filter = "YAML configuration (*.yaml;*.yml)|*.yaml;*.yml" }; if (dialog.ShowDialog(this) == true) { edit.LocalConfigFile = dialog.FileName; DataContext = null; DataContext = edit; } }
+    { var dialog = new OpenFileDialog { Title = "Choose Organon configuration", Filter = "YAML configuration (*.yaml;*.yml)|*.yaml;*.yml" }; if (dialog.ShowDialog(this) == true) { edit.LocalConfigFile = dialog.FileName; DataContext = null; DataContext = edit; } }
     private void ApplyClick(object sender, RoutedEventArgs e)
     {
         if (demo || signIn != null) return;

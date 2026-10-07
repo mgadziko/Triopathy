@@ -34,7 +34,7 @@ public partial class App : Application
                     services.Settings.CodexEnabled = id == "codex";
                 }
                 ShutdownMode = ShutdownMode.OnExplicitShutdown;
-                await LiveAsync(vm, e.Args[live + 1]);
+                await LiveAsync(vm, e.Args[live + 1], e.Args.Contains("--web-test"));
                 vm.Dispose(); Shutdown(0); return;
             }
             if (smoke >= 0)
@@ -54,11 +54,16 @@ public partial class App : Application
             Shutdown(1);
         }
     }
-    private static async Task LiveAsync(MainViewModel vm, string directory)
+    private static async Task LiveAsync(MainViewModel vm, string directory, bool webTest = false)
     {
         Directory.CreateDirectory(directory);
         vm.Engine.StatusChanged += status => Transcripts.AtomicWrite(Path.Combine(directory, "live-status.txt"), status);
         vm.Seed = "What is one practical benefit of hearing several perspectives before making a decision? Reply in one concise sentence and build on the earlier contributions if there are any.";
+        if (webTest)
+        {
+            vm.WebEnabled = true; vm.WebQuery = "Ollama official API documentation"; vm.WebUrls = "https://docs.ollama.com/api/introduction";
+            vm.Seed = "According to the supplied web sources, what is Ollama's default local API base URL? Cite a source URL and keep your response concise.";
+        }
         vm.Rounds = 1;
         await vm.StartAsync();
         if (vm.CanExport) { vm.Export(Path.Combine(directory, "live-transcript.json"), true); vm.Export(Path.Combine(directory, "live-transcript.txt"), false); }
@@ -107,6 +112,11 @@ public partial class App : Application
         await Dispatcher.InvokeAsync(() => { }, DispatcherPriority.ContextIdle);
         window.ScrollToOpening();
         Capture(window, Path.Combine(directory, "sample-conversation.png"), 1160, 820);
+        window.WebAccessExpander.IsExpanded = true;
+        vm.SetWebSources([new("Example source link", "https://example.com", "Sample source")]);
+        vm.WebEnabled = true; vm.WebQuery = "Sample search query";
+        Capture(window, Path.Combine(directory, "web-access.png"), 1160, 920);
+        window.WebAccessExpander.IsExpanded = false; vm.WebEnabled = false; vm.SetWebSources([]);
         vm.Seed = "Changed after the run";
         vm.Export(Path.Combine(directory, "sample-transcript.json"), true); vm.Export(Path.Combine(directory, "sample-transcript.txt"), false);
         using (var doc = JsonDocument.Parse(File.ReadAllText(Path.Combine(directory, "sample-transcript.json"))))

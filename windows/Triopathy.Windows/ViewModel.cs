@@ -51,6 +51,8 @@ public sealed class Services : IDisposable
     public ISecretStore Secrets { get; }
     private readonly HttpClient localHttp = new(new SocketsHttpHandler { UseProxy = false }) { Timeout = TimeSpan.FromMinutes(3) };
     private readonly HttpClient cloudHttp = new() { Timeout = TimeSpan.FromMinutes(3) };
+    private readonly HttpClient webHttp = WebResearch.CreateClient();
+    public IWebResearch Web { get; }
     public OpenAIService OpenAI { get; }
     public ChatGPTPlanService Plan { get; }
     public IConversationBackend Backend { get; }
@@ -83,8 +85,9 @@ public sealed class Services : IDisposable
         if (!demo) ApplyNetworkDefaults(Settings);
         OpenAI = new(cloudHttp, Secrets, Settings); Plan = new(cloudHttp, Secrets, Settings, OpenAI);
         Backend = demo ? new DemoBackend() : new BackendRouter(Settings, new(Settings, localHttp), OpenAI, Plan);
+        Web = new WebResearch(webHttp);
     }
-    public void Dispose() { localHttp.Dispose(); cloudHttp.Dispose(); }
+    public void Dispose() { localHttp.Dispose(); cloudHttp.Dispose(); webHttp.Dispose(); }
 }
 internal sealed class MemorySecrets : ISecretStore
 {
@@ -111,6 +114,10 @@ public sealed class MainViewModel : Bindable, IDisposable
     public Services Services { get; }
     public ConversationEngine Engine { get; }
     public ObservableCollection<MessageItem> Messages { get; } = [];
+    public ObservableCollection<WebSource> WebSources { get; } = [];
+    public bool HasWebSources => WebSources.Count > 0;
+    public void SetWebSources(IReadOnlyList<WebSource> sources)
+    { WebSources.Clear(); foreach (var source in sources) WebSources.Add(source); Notify(nameof(HasWebSources)); }
     public ObservableCollection<ParticipantItem> Participants { get; } = new(Participant.All.Select(p => new ParticipantItem(p)));
     public int[] RoundChoices { get; } = Enumerable.Range(1, 12).ToArray();
     private string seed = "", status = "Ready";
@@ -125,6 +132,11 @@ public sealed class MainViewModel : Bindable, IDisposable
     private bool disposed;
     public bool Demo { get; }
     public bool PersistSettings { get; }
+    private bool webEnabled;
+    private string webQuery = "", webUrls = "";
+    public bool WebEnabled { get => webEnabled; set => Set(ref webEnabled, value); }
+    public string WebQuery { get => webQuery; set => Set(ref webQuery, value); }
+    public string WebUrls { get => webUrls; set => Set(ref webUrls, value); }
     public string Title => Demo ? "Triopathy · Sample conversation" : "Triopathy";
     public string Subtitle => Demo ? "Sample mode — no model requests or settings changes" : "A conversation among your local models and optional ChatGPT plan";
     public string Seed { get => seed; set { Set(ref seed, value); CommandManager.InvalidateRequerySuggested(); } }
@@ -146,12 +158,14 @@ public sealed class MainViewModel : Bindable, IDisposable
     public event Action? ScrollRequested;
     public MainViewModel(Services services, bool demo, bool diagnostics = false)
     {
-        Services = services; Demo = demo; PersistSettings = !demo && !diagnostics; fontSize = services.Settings.FontSize; Engine = new(services.Backend);
+        Services = services; Demo = demo; PersistSettings = !demo && !diagnostics; fontSize = services.Settings.FontSize; Engine = new(services.Backend, demo ? null : services.Web);
+        webEnabled = services.Settings.WebEnabled; webQuery = services.Settings.WebQuery; webUrls = services.Settings.WebUrls;
         StartCommand = new RelayCommand(() => { if (IsRunning) Stop(); else _ = StartAsync(); }, () => !IsChecking && (IsRunning || !string.IsNullOrWhiteSpace(Seed) || HasContext));
         RefreshCommand = new RelayCommand(() => _ = RefreshAsync(), () => CanEdit);
         ClearCommand = new RelayCommand(Clear, () => CanEdit && HasMessages);
         RemoveContextCommand = new RelayCommand(() => { context = null; Notify(nameof(HasContext)); Notify(nameof(ContextLabel)); Status = "Removed loaded context"; CommandManager.InvalidateRequerySuggested(); }, () => CanEdit && HasContext);
         Engine.StatusChanged += value => Status = value;
+        Engine.WebSourcesChanged += SetWebSources;
         Engine.AvailabilityChanged += states => {
             foreach (var p in Participants) { p.Available = states[p.Id].Available; p.Detail = states[p.Id].Detail; }
             if (PersistSettings)
@@ -192,13 +206,21 @@ public sealed class MainViewModel : Bindable, IDisposable
     {
         if (!CanEdit) return; IsRunning = true; active = CancellationTokenSource.CreateLinkedTokenSource(lifetime.Token);
         var actualSeed = string.IsNullOrWhiteSpace(Seed) ? "Continue the loaded context." : Seed.Trim(); var actualContext = context;
-        try { if (PersistSettings) Services.ReloadConnections(); await Engine.RunAsync(Seed, context, Rounds, active.Token); if (Engine.LastRunStarted) { exportSeed = actualSeed; exportContext = actualContext; } }
+        try {
+            if (PersistSettings) {
+                Services.ReloadConnections();
+                Services.Settings.WebEnabled = WebEnabled; Services.Settings.WebQuery = WebQuery; Services.Settings.WebUrls = WebUrls;
+                Services.Settings.Save();
+            }
+            await Engine.RunAsync(Seed, context, Rounds, active.Token, WebEnabled, WebQuery, WebUrls);
+            if (Engine.LastRunStarted) { exportSeed = actualSeed; exportContext = actualContext; }
+        }
         catch (Exception ex) { Status = ex.Message; } finally { active.Dispose(); active = null; IsRunning = false; }
     }
     public void Stop() { active?.Cancel(); Status = "Stopping…"; }
     public void Clear()
     {
-        if (!CanEdit) return; Engine.Messages.Clear(); Messages.Clear(); foreach (var p in Participants) p.Count = 0;
+        if (!CanEdit) return; Engine.Messages.Clear(); Messages.Clear(); WebSources.Clear(); Notify(nameof(HasWebSources)); foreach (var p in Participants) p.Count = 0;
         Notify(nameof(HasMessages)); Notify(nameof(CanExport)); Status = "Cleared";
     }
     public void LoadContext(string path)

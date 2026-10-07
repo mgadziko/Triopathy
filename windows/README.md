@@ -12,13 +12,13 @@ Launch `Triopathy.Windows.exe`. Open **Connections** to configure participants, 
 
 Named participants use `<profiles folder>/<profile>/config.yaml` for `local`, `whitelotus`, `blacklotus`, `greenlotus`, `cheyenne`, and `hal`. Choose a Windows path or a WSL UNC path such as `\\wsl.localhost\Ubuntu\home\your-user\.hermes\profiles`. Files are read only and reread before every turn.
 
-Hermes Local also supports a standalone configuration file. Its default is `%LOCALAPPDATA%\hermes\config.yaml`, matching this machine's existing Hermes installation. Neither a profile nor an inference server is created or modified automatically.
+Organon also supports a standalone configuration file. Its default is `%LOCALAPPDATA%\hermes\config.yaml`, matching this machine's existing Hermes installation. Neither a profile nor an inference server is created or modified automatically.
 
 The parser accepts named-provider `api`/`default_model` configuration under `providers` or `custom_providers`, and current Hermes `model.base_url`/`model.default` configuration. An explicit endpoint and model in Connections overrides the file. `openai` protocol appends `/chat/completions` to a `/v1` base; `ollama` uses `/api/chat`. Both HTTP and HTTPS work. Uncheck **Join** to omit a participant. Reachability checks only open a TCP connection; they do not load a model or submit a prompt.
 
 The app does not run Hermes itself, invoke tools, or carry over Hermes agent memory. A model inference server must already be running. Models are chosen from your configuration, never silently substituted.
 
-This build includes the owner's LAN participant configuration in `Triopathy.Windows/network-defaults.json`, including Hermes Local on the MacBook at `192.168.4.164`. Missing connections fall back to these entries; explicit saved endpoints and existing named profiles take priority, and disabled participants stay disabled. Edit that file before building for another network. Refreshing hosts and starting a conversation reload saved connections. The app writes a nonsecret `connections-status.json` diagnostic alongside settings with the active addresses and availability reasons.
+This build includes the owner's LAN participant configuration in `Triopathy.Windows/network-defaults.json`, including Organon on the MacBook at `192.168.4.164`. Missing connections fall back to these entries; explicit saved endpoints and existing named profiles take priority, and disabled participants stay disabled. Edit that file before building for another network. Refreshing hosts and starting a conversation reload saved connections. The app writes a nonsecret `connections-status.json` diagnostic alongside settings with the active addresses and availability reasons.
 
 ## ChatGPT / Codex
 
@@ -63,3 +63,21 @@ Triopathy.Windows.exe --smoke-test C:\path\to\test-output
 This renders the real windows, checks bindings and state transitions, exports sample transcripts, and exits with a result code and `smoke-report.json`. It uses in-memory credentials and sample responses; it does not alter user settings. The release is unsigned and does not include an installer or automatic updates.
 
 `--live-test C:\path\to\test-output` runs one short real conversation using saved connections and writes a transcript and reachability report. It sends actual inference requests. Add `--participant hal` (or another participant ID) to check just one participant without changing the saved connection settings. Model behavior can vary; the prompt explicitly asks each participant to provide only its own contribution.
+
+## Web access (Windows)
+
+Expand **Web access** below the transcript and check **Search the web and share sources with all participants**. Enter a search query, supply up to three public page URLs (one per line), or do both. If both fields are blank, the conversation seed becomes the search query. The query is sent to DuckDuckGo; loaded documents and earlier replies are not included in the query automatically. The setting is off by default and is saved when starting a conversation.
+
+Before the first model turn, Triopathy searches DuckDuckGo's HTML results and reads up to three public HTML or plain-text pages. Each participant, including Codex, receives the same bounded source excerpts. This is shared research at the start of a run, rather than independent model-directed browsing or follow-up searches during turns. Source titles and URLs appear in the transcript and exports; clickable source links appear in the Web access panel. The prompt asks participants to cite sources and treat page content as reference material, not instructions.
+
+Search can be throttled or blocked, and page retrieval cannot execute JavaScript or access pages requiring sign-in, PDFs, or other binary formats. Failures are reported and the discussion continues with whatever sources were read. You can supply page URLs directly if search is unavailable. A model's citations and conclusions still need review.
+
+The reader uses unauthenticated requests without browser cookies, allows only public HTTP/HTTPS addresses on standard ports, checks resolved addresses and redirects, limits each page to 1 MB and each excerpt to 6,000 characters, and supports cancellation. Private and local addresses are blocked for web retrieval; your LAN model endpoints continue to work through the separate inference connection.
+
+For a real web-and-model test without changing saved settings:
+
+```powershell
+Triopathy.Windows.exe --live-test C:\Temp\Triopathy-web --participant local --web-test
+```
+
+The macOS app does not yet include this web integration.

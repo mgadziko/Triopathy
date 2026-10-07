@@ -12,7 +12,7 @@ public static class Json
 public sealed record Participant(string Id, string Name, string Color)
 {
     public static readonly Participant[] All = [
-        new("local", "Hermes Local", "#467E72"), new("whitelotus", "WhiteLotus", "#9A782F"),
+        new("local", "Organon", "#467E72"), new("whitelotus", "WhiteLotus", "#9A782F"),
         new("blacklotus", "BlackLotus", "#70627F"), new("greenlotus", "GreenLotus", "#50783F"),
         new("cheyenne", "Cheyenne", "#AD6846"), new("hal", "Hal", "#4B78A0"), new("codex", "Codex", "#318F92")];
     public static readonly Participant System = new("system", "Triopathy", "#74797C");
@@ -74,6 +74,9 @@ public sealed class AppSettings
     public bool CodexEnabled { get; set; } = true;
     public string ApiModel { get; set; } = "gpt-5.4";
     public double FontSize { get; set; } = 16;
+    public bool WebEnabled { get; set; }
+    public string WebQuery { get; set; } = "";
+    public string WebUrls { get; set; } = "";
     public string HostId { get; set; } = "urn:uuid:" + Guid.NewGuid().ToString().ToLowerInvariant();
     public static string DataDirectory => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Triopathy");
     public static AppSettings Load(string? directory = null)

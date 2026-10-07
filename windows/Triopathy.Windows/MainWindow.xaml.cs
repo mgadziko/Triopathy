@@ -23,7 +23,7 @@ public partial class MainWindow : Window
     protected override void OnClosing(CancelEventArgs e)
     {
         ViewModel.Stop();
-        if (ViewModel.PersistSettings) try { ViewModel.Services.ReloadConnections(); ViewModel.Services.Settings.Save(); } catch (Exception ex) { MessageBox.Show(this, "Settings could not be saved: " + ex.Message, "Triopathy"); }
+        if (ViewModel.PersistSettings) try { var saved = Triopathy.Core.AppSettings.Load(ViewModel.Services.Settings.StorageDirectory); saved.FontSize = ViewModel.FontSize; saved.Save(); } catch (Exception ex) { MessageBox.Show(this, "Settings could not be saved: " + ex.Message, "Triopathy"); }
         ViewModel.Dispose(); base.OnClosing(e);
     }
     private void LoadContextClick(object sender, RoutedEventArgs e)
@@ -52,4 +52,10 @@ public partial class MainWindow : Window
     private void SmallerClick(object sender, RoutedEventArgs e) => ViewModel.FontSize--;
     private void ResetFontClick(object sender, RoutedEventArgs e) => ViewModel.FontSize = 16;
     public void ScrollToOpening() => TranscriptScroll.ScrollToTop();
+    private void WebSourceNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+    {
+        try { var uri = Triopathy.Core.WebResearch.PublicUri(e.Uri.AbsoluteUri); System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(uri.AbsoluteUri) { UseShellExecute = true }); }
+        catch (Exception ex) { ViewModel.Status = "Could not open source: " + ex.Message; }
+        e.Handled = true;
+    }
 }

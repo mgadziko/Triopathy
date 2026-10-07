@@ -7,7 +7,7 @@
     <TextBlock Text="HERMES CONFIGURATION" Style="{StaticResource SectionLabel}"/>
     <TextBlock Text="Profile folder — supports Windows paths and WSL network paths" Foreground="{StaticResource Muted}" FontSize="12"/>
     <DockPanel Margin="0,6,0,12"><Button DockPanel.Dock="Right" Content="Browse…" Click="BrowseProfilesClick" Margin="8,0,0,0"/><TextBox Text="{Binding ProfilesDirectory, UpdateSourceTrigger=PropertyChanged}"/></DockPanel>
-    <TextBlock Text="Local profile file — used for Hermes Local when a named local profile is absent" Foreground="{StaticResource Muted}" FontSize="12"/>
+    <TextBlock Text="Local profile file — used for Organon when a named local profile is absent" Foreground="{StaticResource Muted}" FontSize="12"/>
     <DockPanel Margin="0,6,0,14"><Button DockPanel.Dock="Right" Content="Browse…" Click="BrowseLocalClick" Margin="8,0,0,0"/><TextBox Text="{Binding LocalConfigFile, UpdateSourceTrigger=PropertyChanged}"/></DockPanel>
     <TextBlock Text="Leave an endpoint blank to use its live Hermes profile. An explicit endpoint and model override that profile." TextWrapping="Wrap" Foreground="{StaticResource Muted}" FontSize="12" Margin="0,0,0,10"/>
     <DataGrid x:Name="ParticipantGrid" ItemsSource="{Binding Participants}" AutoGenerateColumns="False" CanUserAddRows="False" CanUserDeleteRows="False" CanUserSortColumns="False" HeadersVisibility="Column" RowHeight="42" GridLinesVisibility="Horizontal" Background="White" BorderBrush="#D6DDD7" SelectionUnit="Cell" Margin="0,0,0,22">

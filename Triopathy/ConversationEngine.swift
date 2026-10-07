@@ -213,7 +213,7 @@ final class TriopathyViewModel: ObservableObject {
 
     func speakerName(_ speaker: ConversationMessage.Speaker) -> String {
         switch speaker {
-        case .local: return "Hermes Local"
+        case .local: return "Organon"
         case .whiteLotus: return "WhiteLotus"
         case .blackLotus: return "BlackLotus"
         case .greenLotus: return "GreenLotus"

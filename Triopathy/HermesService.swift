@@ -13,7 +13,7 @@ enum HermesProfile: String, CaseIterable, Identifiable {
 
     var displayName: String {
         switch self {
-        case .local: return "Hermes Local"
+        case .local: return "Organon"
         case .whiteLotus: return "WhiteLotus"
         case .blackLotus: return "BlackLotus"
         case .greenLotus: return "GreenLotus"
