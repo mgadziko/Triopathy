@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Triopathy.Core\Triopathy.Core.csproj" />
     <EmbeddedResource Include="network-defaults.json" LogicalName="Triopathy.NetworkDefaults" />
+    <Resource Include="Assets\Triopathy.ico" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -11,6 +12,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <ApplicationIcon>Assets\Triopathy.ico</ApplicationIcon>
     <Version>0.1.0</Version>
     <Product>Triopathy</Product>
     <Description>Conversation room for local Hermes models and an optional ChatGPT plan participant.</Description>
