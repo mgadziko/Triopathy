@@ -2,7 +2,7 @@
 
 Triopathy is a native conversation room for **macOS and Windows**. Give it a question or a context document, and several models take turns responding to the same conversation. Each participant receives the seed and recent contributions so it can build on the other perspectives.
 
-The room includes **Hermes Local, WhiteLotus, BlackLotus, GreenLotus, Cheyenne, and Hal**, plus an optional **Codex** participant connected through ChatGPT or an OpenAI API key. Model servers can run on the same computer or elsewhere on your network.
+The room includes servers named **Hermes Local, WhiteLotus, BlackLotus, GreenLotus, Cheyenne, and Hal**, plus an optional **Codex** participant connected through ChatGPT or an OpenAI API key. Model servers can run on the same computer or elsewhere on your network.
 
 | Platform | Application | Source |
 | --- | --- | --- |
