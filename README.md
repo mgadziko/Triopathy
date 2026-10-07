@@ -1,36 +1,98 @@
 # Triopathy
 
-Triopathy is a native macOS SwiftUI conversation room for local Hermes profiles and an optional ChatGPT-plan participant.
+Triopathy is a native conversation room for **macOS and Windows**. Give it a question or a context document, and several models take turns responding to the same conversation. Each participant receives the seed and recent contributions so it can build on the other perspectives.
 
-- `hermes-local`
-- `hermes-whitelotus`
-- `hermes-blacklotus`
-- `hermes-greenlotus`
+The room includes **Hermes Local, WhiteLotus, BlackLotus, GreenLotus, Cheyenne, and Hal**, plus an optional **Codex** participant connected through ChatGPT or an OpenAI API key. Model servers can run on the same computer or elsewhere on your network.
 
-It runs on the MacBook and reads each corresponding Hermes profile's live provider, endpoint, and model selection. It then sends a conversation-only request directly to that configured local model backend. Each turn receives the seed and a short recent transcript; tool schemas, agent workflows, and Hermes session memory are deliberately excluded so the three models can respond reliably as conversational participants.
+| Platform | Application | Source |
+| --- | --- | --- |
+| macOS | Native SwiftUI app | `Triopathy/`, `Triopathy.xcodeproj` |
+| Windows 10/11 x64 | Native C# / WPF app | [`windows/`](windows/) |
 
-## ChatGPT plan participant
+## Features
 
-Choose **Configure Codex…** and then **Continue with ChatGPT** to connect an eligible ChatGPT Plus or Pro account. The app follows OpenAI's local, open-source Sign in with ChatGPT flow: a browser authorizes Triopathy, the app validates the returned OpenID Connect token, and the protected connection is stored in this Mac user's Keychain. Codex then uses the selected account's ChatGPT plan rather than an API key.
+- Conversations with a chosen number of rounds; each available participant speaks once per round.
+- Direct requests to configured OpenAI-compatible and Ollama model servers.
+- UTF-8 text and JSON context loading, plus JSON and readable text transcript export.
+- Offline participant skipping, cancellation, and continued discussion after a failed reply.
+- Optional ChatGPT-plan sign-in or an API-key fallback, with protected credential storage.
 
-The existing API-key form remains an optional fallback only. A connected ChatGPT plan takes priority. No API key, ChatGPT token, or transcript credential is written into this repository.
+Triopathy does not launch Hermes agents, invoke tools, or carry over Hermes session memory. Inference servers must already be running. The app reads configuration and sends conversation requests without changing server settings or model installations.
 
-## Use
+## Windows quick start
 
-1. Open `Triopathy.xcodeproj` in Xcode or build from Terminal.
-2. Enter a conversation seed. Optionally choose **File > Load Context Seed…** to import a UTF-8 `.txt` or `.json` document. JSON is formatted for readability; the loaded document is treated as reference history, and every participant is told to recognize any contributions labeled with its own name.
-3. Choose the number of rounds; each participant speaks once per round.
-4. Click **Begin Conversation**.
-5. Use **File > Save as JSON…** for structured transcript data or **File > Save as TXT…** for a readable transcript.
+The Windows port is implemented and has been tested with replies from all six LAN model participants. See the [Windows guide](windows/README.md) for detailed configuration and diagnostics.
 
-The app does not change any Hermes profile or inference configuration. It uses whatever live endpoint and model each named profile is configured to use at the moment a turn begins.
+Install the **.NET 10 SDK**, then clone and build:
 
-## Windows version
+```powershell
+git clone https://github.com/mgadziko/Triopathy.git
+cd Triopathy
+powershell -NoProfile -ExecutionPolicy Bypass -File windows/build.ps1 -Publish
+.\windows\publish\Triopathy.Windows.exe
+```
 
-A native C# / WPF Windows port is in `windows/`. It includes the conversation room, Hermes profile and endpoint configuration, ChatGPT-plan sign-in, API-key fallback, encrypted Windows credential storage, context loading, transcript export, and cancellation. See [Windows setup and build instructions](windows/README.md).
+The script runs the behavior tests, builds the app, and publishes a self-contained x64 executable in `windows/publish`. The published app includes its .NET runtime. It is unsigned and currently has no installer or automatic updates. This repository contains source; the build command creates the executable locally.
 
-## macOS build
+1. Open **Connections** and confirm each participant's endpoint, model, protocol, and **Join** setting.
+2. Save connections and click **Refresh hosts**.
+3. Enter a seed, optionally load a context document, and choose 1–12 rounds.
+4. Click **Begin conversation**. Use **Stop conversation** to cancel an active request.
+5. Export the transcript as JSON or TXT from the **File** menu.
+
+### Included LAN configuration
+
+The owner's network configuration is bundled in [`network-defaults.json`](windows/Triopathy.Windows/network-defaults.json). Missing connections fall back to these entries; explicit saved endpoints and existing named Hermes profiles take priority. Disabled participants remain disabled. Use **Connections** to change the addresses, or edit the defaults before building for another network.
+
+| Participant | Server | Model | Protocol |
+| --- | --- | --- | --- |
+| Hermes Local — MacBook Pro | `192.168.4.164:11434` | `qwen3-coder:q8-64k` | OpenAI-compatible |
+| WhiteLotus | `192.168.4.165:11435` | `qwen3.8-27b-q4km` | OpenAI-compatible |
+| BlackLotus | `192.168.4.150:11435` | `qwen3.8-27b-q4km` | OpenAI-compatible |
+| GreenLotus | `192.168.4.57:11435` | `greenlotus-qwen` | OpenAI-compatible |
+| Cheyenne | `192.168.4.101:11434` | `qwen3-coder:latest` | OpenAI-compatible |
+| Hal | `192.168.4.78:11434` | `qwen-coder:latest` | Ollama native |
+
+OpenAI-compatible endpoints use `http://<server>/v1/chat/completions`; Hal uses `http://<server>/api/chat`. Windows requests up to 512 response tokens at temperature 0.75, with thinking disabled in the configured request format. Context capacity is configured on the model server.
+
+**Hermes Local is a participant name.** Its model can run on another computer. Use that computer's LAN address; `127.0.0.1` always refers to the computer running Triopathy.
+
+Refresh and new conversations reload saved connections. Host badges test server reachability; a reachable server can still reject a request if the configured model is missing. Hover over an offline badge for its reason. `No profile or endpoint configured` means the app needs a connection address or a valid Hermes profile. An HTTP 404 can indicate that the requested model is not installed on that server.
+
+## macOS quick start
+
+Open `Triopathy.xcodeproj` in Xcode, or build from Terminal:
 
 ```sh
 xcodebuild -project Triopathy.xcodeproj -scheme Triopathy -configuration Debug -destination 'platform=macOS,arch=arm64' CODE_SIGNING_ALLOWED=NO build
 ```
+
+The macOS app reads the named Hermes profiles' live provider, endpoint, and model selection before each turn. Enter a seed, choose the rounds, and click **Begin Conversation**. **File > Load Context Seed…** imports a UTF-8 `.txt` or `.json` document. **Save as JSON…** and **Save as TXT…** export the transcript.
+
+## ChatGPT / Codex
+
+On Windows, open **Connections > Continue with ChatGPT**. On macOS, choose **Configure Codex… > Continue with ChatGPT**. Complete sign-in and authorization in your browser, then select an available model. Triopathy creates its own connection; it does not copy credentials from the Codex desktop app or another computer.
+
+A connected ChatGPT plan takes priority over the optional API key. Plan failures do not silently switch to paid API usage. API usage is billed separately. Available models and plan access depend on the authorized account. Automated tests simulate sign-in; live plan authorization requires the user to complete the browser flow.
+
+macOS protects credentials in the user's Keychain. Windows encrypts them with DPAPI for the current user. Credentials are not stored in this repository or included in builds. Windows saves nonsecret settings and connection diagnostics in `%LOCALAPPDATA%\Triopathy`.
+
+## Verification
+
+Run the Windows behavior tests and build independently:
+
+```powershell
+dotnet run --project windows/Triopathy.Tests -c Release
+dotnet build windows/Triopathy.Windows -c Release
+```
+
+The suite contains 28 behavior tests covering configuration, request formats, conversation ordering, cancellation, transcript export, protected credentials, and the ChatGPT authorization flow. Additional WPF smoke checks cover bindings, layout, saved-connection reloads, and bundled network defaults.
+
+After publishing, sample mode and an offscreen UI check are available:
+
+```powershell
+.\windows\publish\Triopathy.Windows.exe --demo
+.\windows\publish\Triopathy.Windows.exe --smoke-test C:\Temp\Triopathy-smoke
+```
+
+These modes send no inference requests and do not change saved settings. For real model checks, see the [Windows guide's live-test instructions](windows/README.md#build-and-verify).
