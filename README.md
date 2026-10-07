@@ -13,7 +13,7 @@ The room includes servers named **Organon, WhiteLotus, BlackLotus, GreenLotus, C
 
 - Conversations with a chosen number of rounds; each available participant speaks once per round.
 - Direct requests to configured OpenAI-compatible and Ollama model servers.
-- Optional Windows web search and public-page reading, with shared sources and citations.
+- Optional shared web search and public-page reading, with sources and citations.
 - UTF-8 text and JSON context loading, plus JSON and readable text transcript export.
 - Offline participant skipping, cancellation, and continued discussion after a failed reply.
 - Optional ChatGPT-plan sign-in or an API-key fallback, with protected credential storage.
@@ -98,8 +98,8 @@ After publishing, sample mode and an offscreen UI check are available:
 
 These modes send no inference requests and do not change saved settings. For real model checks, see the [Windows guide's live-test instructions](windows/README.md#build-and-verify).
 
-## Web research on Windows
+## Web research
 
-Expand **Web access**, enable it, and enter a search query or public page URLs. Triopathy gathers up to three sources before the first turn and shares their excerpts with every participant. Source links are shown in the transcript and Web access panel. The search query goes to DuckDuckGo; leaving both fields blank uses your seed as the query. Web access is off by default.
+On either platform, expand **Web access**, enable it, and enter a search query or public page URLs. Triopathy gathers up to three sources before the first turn and shares their excerpts with every participant. Source links are shown in the transcript and Web access panel. The search query goes to DuckDuckGo; leaving both fields blank uses your seed as the query. Web access is off by default.
 
-This provides shared research for the conversation, rather than independent browsing by each model. Search may be blocked or throttled; direct page URLs remain available. See the [web access guide](windows/README.md#web-access-windows) for limits and testing. The macOS app does not yet include this feature.
+This provides shared research for the conversation, rather than independent browsing by each model. Search may be blocked or throttled; direct page URLs remain available. See the [web access guide](windows/README.md#web-access-windows) for limits and testing.

@@ -23,13 +23,10 @@ struct ContentView: View {
                 Text("A conversation among your local Hermes profiles and optional ChatGPT plan")
                     .foregroundStyle(.secondary)
                 HStack(spacing: 8) {
-                    participantBadge(.local)
-                    participantBadge(.whiteLotus)
-                    participantBadge(.blackLotus)
-                    participantBadge(.greenLotus)
-                    participantBadge(.cheyenne)
-                    participantBadge(.hal)
-                    participantBadge(.codex)
+                    ForEach(viewModel.participants.indices, id: \.self) { participantIndex in
+                        let participant = viewModel.participants[participantIndex]
+                        participantBadge(participant, index: participantIndex)
+                    }
                 }
             }
             Spacer()
@@ -43,19 +40,21 @@ struct ContentView: View {
         .padding(.bottom, 14)
     }
 
-    private func participantBadge(_ speaker: ConversationMessage.Speaker) -> some View {
+    private func participantBadge(_ participant: Participant, index: Int) -> some View {
         HStack(spacing: 5) {
-            Circle().fill(viewModel.isAvailable(speaker) ? color(for: speaker) : .gray).frame(width: 8, height: 8)
-            Text(viewModel.speakerName(speaker))
-            Text(viewModel.isAvailable(speaker) ? "\(viewModel.counts[speaker, default: 0])" : "Offline")
+            Circle().fill(viewModel.isAvailable(participant.name) ? color(for: participant.name) : .gray).frame(width: 8, height: 8)
+            Toggle(isOn: $viewModel.participants[index].isEnabled) {
+                Text(viewModel.speakerName(participant.name))
+            }
+            Text(participant.isEnabled ? (viewModel.isAvailable(participant.name) ? "\(viewModel.counts[participant.name, default: 0])" : "Offline") : "Off")
                 .foregroundStyle(.secondary)
         }
         .font(.caption)
         .padding(.horizontal, 9)
         .padding(.vertical, 5)
-        .background((viewModel.isAvailable(speaker) ? color(for: speaker) : .gray).opacity(0.13))
+        .background((viewModel.isAvailable(participant.name) ? color(for: participant.name) : .gray).opacity(0.13))
         .clipShape(Capsule())
-        .opacity(viewModel.isAvailable(speaker) ? 1 : 0.55)
+        .opacity(participant.isEnabled && viewModel.isAvailable(participant.name) ? 1 : 0.55)
     }
 
     private var transcript: some View {
@@ -120,6 +119,25 @@ struct ContentView: View {
                 .background(Color(nsColor: .textBackgroundColor))
                 .clipShape(RoundedRectangle(cornerRadius: 9))
                 .disabled(viewModel.isRunning)
+
+            DisclosureGroup("Web access") {
+                VStack(alignment: .leading, spacing: 8) {
+                    Toggle("Share web research with every participant", isOn: $viewModel.webEnabled)
+                    TextField("Search query (uses the seed when blank)", text: $viewModel.webQuery)
+                    TextField("Public page URLs, separated by spaces", text: $viewModel.webURLs)
+                    Text("Web access is off by default. Triopathy retrieves up to three public pages and gives every participant the same source packet; participants do not browse independently.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    if !viewModel.webSources.isEmpty {
+                        ForEach(viewModel.webSources) { source in
+                            Link("[\(viewModel.webSources.firstIndex(of: source).map { $0 + 1 } ?? 0)] \(source.title)", destination: source.url)
+                                .font(.caption)
+                        }
+                    }
+                }
+                .padding(.top, 4)
+            }
+            .disabled(viewModel.isRunning)
 
             HStack(spacing: 12) {
                 Text("Rounds").foregroundStyle(.secondary)

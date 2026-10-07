@@ -15,6 +15,7 @@
 		A10000000000000000000006 /* OpenAIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000016 /* OpenAIService.swift */; };
 		A10000000000000000000007 /* CodexSetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000017 /* CodexSetupView.swift */; };
 		A10000000000000000000008 /* ChatGPTPlanService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000018 /* ChatGPTPlanService.swift */; };
+		A10000000000000000000009 /* WebResearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000000000000000000019 /* WebResearchService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -27,6 +28,7 @@
 		A10000000000000000000016 /* OpenAIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIService.swift; sourceTree = "<group>"; };
 		A10000000000000000000017 /* CodexSetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CodexSetupView.swift; sourceTree = "<group>"; };
 		A10000000000000000000018 /* ChatGPTPlanService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatGPTPlanService.swift; sourceTree = "<group>"; };
+		A10000000000000000000019 /* WebResearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebResearchService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +60,7 @@
 				A10000000000000000000016 /* OpenAIService.swift */,
 				A10000000000000000000017 /* CodexSetupView.swift */,
 				A10000000000000000000018 /* ChatGPTPlanService.swift */,
+				A10000000000000000000019 /* WebResearchService.swift */,
 				A10000000000000000000015 /* Assets.xcassets */,
 			);
 			path = Triopathy;
@@ -147,6 +150,7 @@
 				A10000000000000000000006 /* OpenAIService.swift in Sources */,
 				A10000000000000000000007 /* CodexSetupView.swift in Sources */,
 				A10000000000000000000008 /* ChatGPTPlanService.swift in Sources */,
+				A10000000000000000000009 /* WebResearchService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
