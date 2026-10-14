@@ -572,7 +572,7 @@ private struct PlanResponseRequest: Encodable {
 }
 
 private final class OAuthCallbackServer: @unchecked Sendable {
-    private let queue = DispatchQueue(label: "com.ricercar.Triopathy.oauth-callback")
+    private let queue = DispatchQueue(label: "net.quantumpenguin.Triopathy.oauth-callback")
     private let lock = NSLock()
     private var listener: NWListener?
     private var callbackContinuation: CheckedContinuation<URL, Error>?

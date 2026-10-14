@@ -9,6 +9,14 @@ public sealed class ConversationEngine(IConversationBackend backend, IWebResearc
     public event Action<IReadOnlyList<WebSource>>? WebSourcesChanged;
     public List<ConversationMessage> Messages { get; } = [];
     public bool LastRunStarted { get; private set; }
+    private string? sessionSeed;
+
+    public void Clear()
+    {
+        Messages.Clear();
+        sessionSeed = null;
+        WebSourcesChanged?.Invoke([]);
+    }
 
     public async Task<IReadOnlyDictionary<string, Availability>> CheckAsync(CancellationToken token)
     {
@@ -30,9 +38,13 @@ public sealed class ConversationEngine(IConversationBackend backend, IWebResearc
             var active = Participant.All.Where(p => availability[p.Id].Available).ToArray();
             if (active.Length == 0) { StatusChanged?.Invoke("No participants available. Open Connections to configure a model."); return; }
             LastRunStarted = true;
-            Messages.Clear();
+            var continuesExistingSession = string.Equals(sessionSeed, seed, StringComparison.Ordinal) && Messages.Count > 0;
+            var transcript = continuesExistingSession ? Messages.ToList() : [];
+            if (!continuesExistingSession) Messages.Clear();
             WebSourcesChanged?.Invoke([]);
+            sessionSeed = seed;
             Add(Participant.System, $"Conversation seed: {seed}");
+            if (continuesExistingSession) Add(Participant.System, "Continuing this session with the unchanged seed; earlier turns remain context for this exploration.");
             if (context != null) Add(Participant.System, $"Loaded context reference: {context.Filename} ({context.Text.Length:N0} characters).");
             var offline = Participant.All.Where(p => !availability[p.Id].Available).Select(p => p.Name).ToArray();
             if (offline.Length > 0) Add(Participant.System, "Unavailable and skipped: " + string.Join(", ", offline) + ".");
@@ -47,7 +59,6 @@ public sealed class ConversationEngine(IConversationBackend backend, IWebResearc
                 Add(Participant.System, research.Sources.Count > 0 ? research.Summary : "No readable web sources found.");
                 foreach (var notice in research.Notices) Add(Participant.System, "Web research: " + notice);
             }
-            var transcript = new List<ConversationMessage>();
             for (var round = 1; round <= rounds; round++)
             foreach (var participant in active)
             {

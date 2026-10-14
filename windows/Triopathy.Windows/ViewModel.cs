@@ -220,7 +220,7 @@ public sealed class MainViewModel : Bindable, IDisposable
     public void Stop() { active?.Cancel(); Status = "Stopping…"; }
     public void Clear()
     {
-        if (!CanEdit) return; Engine.Messages.Clear(); Messages.Clear(); WebSources.Clear(); Notify(nameof(HasWebSources)); foreach (var p in Participants) p.Count = 0;
+        if (!CanEdit) return; Engine.Clear(); Messages.Clear(); WebSources.Clear(); Notify(nameof(HasWebSources)); foreach (var p in Participants) p.Count = 0;
         Notify(nameof(HasMessages)); Notify(nameof(CanExport)); Status = "Cleared";
     }
     public void LoadContext(string path)

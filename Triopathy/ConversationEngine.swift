@@ -75,6 +75,7 @@ final class TriopathyViewModel: ObservableObject {
     private let webResearch = WebResearchService()
     private var task: Task<Void, Never>?
     private var shouldStop = false
+    private var sessionSeed: String?
 
     init() {
         refreshAvailability()
@@ -95,20 +96,24 @@ final class TriopathyViewModel: ObservableObject {
         statusText = "Checking LAN participants…"
         Task { [weak self] in
             guard let self else { return }
-            let checks = await withTaskGroup(of: (ConversationMessage.Speaker, Bool).self, returning: [(ConversationMessage.Speaker, Bool)].self) { group in
+            let checks = await withTaskGroup(of: (ConversationMessage.Speaker, Bool, String).self, returning: [(ConversationMessage.Speaker, Bool, String)].self) { group in
                 for speaker in self.participants.filter(\.isEnabled).map(\.name) {
                     if speaker == .codex {
-                        group.addTask { (speaker, ChatGPTPlanService.isConnected || OpenAIService.hasAPIKey) }
+                        group.addTask { (speaker, ChatGPTPlanService.isConnected || OpenAIService.hasAPIKey, "") }
                     } else if let profile = speaker.profile {
-                        group.addTask { (speaker, await HermesService().isAvailable(profile: profile)) }
+                        group.addTask {
+                            let result = await HermesService().availabilityCheck(profile: profile)
+                            return (speaker, result.reachable, result.detail)
+                        }
                     }
                 }
-                var results: [(ConversationMessage.Speaker, Bool)] = []
+                var results: [(ConversationMessage.Speaker, Bool, String)] = []
                 for await result in group { results.append(result) }
                 return results
             }
-            availability = Dictionary(uniqueKeysWithValues: checks)
-            statusText = "Ready"
+            availability = Dictionary(uniqueKeysWithValues: checks.map { ($0.0, $0.1) })
+            let failures = checks.filter { !$0.1 }.map { "\(speakerName($0.0)): \($0.2)" }
+            statusText = failures.isEmpty ? "Ready" : failures.joined(separator: " | ")
         }
     }
 
@@ -127,13 +132,15 @@ final class TriopathyViewModel: ObservableObject {
         shouldStop = false
         statusText = "Checking LAN participants…"
         let effectiveSeed = cleanedSeed.isEmpty ? "Continue the loaded context." : cleanedSeed
+        let continuesExistingSession = sessionSeed == effectiveSeed && !messages.isEmpty
         task = Task {
             await run(
                 seed: effectiveSeed,
                 loadedContext: loadedSeedContext,
                 includeWebResearch: webEnabled,
                 query: webQuery,
-                urls: webURLs
+                urls: webURLs,
+                continuesExistingSession: continuesExistingSession
             )
         }
     }
@@ -148,6 +155,7 @@ final class TriopathyViewModel: ObservableObject {
         guard !isRunning else { return }
         messages.removeAll()
         webSources.removeAll()
+        sessionSeed = nil
         transcriptRevision += 1
         statusText = "Cleared"
     }
@@ -250,7 +258,8 @@ final class TriopathyViewModel: ObservableObject {
         loadedContext: LoadedSeedContext?,
         includeWebResearch: Bool,
         query: String,
-        urls: String
+        urls: String,
+        continuesExistingSession: Bool
     ) async {
         await refreshAvailabilityForConversation()
         let activeParticipants = participants.filter { $0.isEnabled && self.isAvailable($0.name) }
@@ -260,9 +269,16 @@ final class TriopathyViewModel: ObservableObject {
             isRunning = false
             return
         }
-        messages.removeAll()
+        let priorTranscript = continuesExistingSession ? messages : []
+        if !continuesExistingSession {
+            messages.removeAll()
+        }
         webSources.removeAll()
+        sessionSeed = seed
         append(.init(speaker: .system, text: "Conversation seed: \(seed)"))
+        if continuesExistingSession {
+            append(.init(speaker: .system, text: "Continuing this session with the unchanged seed; earlier turns remain context for this exploration."))
+        }
         if let loadedContext {
             append(.init(speaker: .system, text: "Loaded context reference: \(loadedContext.filename) (\(loadedContext.text.count.formatted()) characters)."))
         }
@@ -288,7 +304,7 @@ final class TriopathyViewModel: ObservableObject {
                 append(.init(speaker: .system, text: "Web research: \(notice)"))
             }
         }
-        var transcript: [ConversationMessage] = []
+        var transcript = priorTranscript
         for round in 1...rounds {
             for participant in activeParticipants {
                 if shouldStop || Task.isCancelled {

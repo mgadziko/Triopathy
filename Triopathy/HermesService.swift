@@ -148,6 +148,7 @@ private final class RequestBox {
 
 final class HermesService {
     private let profilesDirectory: URL
+    private let arithmeticSafetyInstruction = "For exact arithmetic, money, dates, counts, measurements, or configuration values, do not present an unverified value as exact. This Triopathy conversation has no calculator or code-execution tool; state that deterministic external verification is required when exactness matters."
     private var activeConnection: NWConnection?
     private var activeTask: URLSessionDataTask?
 
@@ -164,36 +165,31 @@ final class HermesService {
         activeConnection = nil
     }
 
-    /// Tests only whether the profile's configured model service accepts a LAN connection.
-    /// It never submits a prompt or loads the model.
+    /// Tests only whether the profile's configured model service returns an HTTP response.
+    /// It never submits a prompt or loads a model.
     func isAvailable(profile: HermesProfile) async -> Bool {
-        guard let backend = try? backend(for: profile),
-              let host = backend.apiURL.host,
-              let port = NWEndpoint.Port(rawValue: UInt16(backend.apiURL.port ?? 80)) else {
-            return false
+        await availabilityCheck(profile: profile).reachable
+    }
+
+    /// Provides a failure reason when the user explicitly refreshes host status.
+    func availabilityCheck(profile: HermesProfile) async -> (reachable: Bool, detail: String) {
+        guard let backend = try? backend(for: profile) else {
+            return (false, "could not read the Hermes profile")
         }
 
-        return await withCheckedContinuation { continuation in
-            let connection = NWConnection(host: NWEndpoint.Host(host), port: port, using: .tcp)
-            let box = RequestBox()
-            box.connection = connection
-            func finish(_ available: Bool) {
-                guard !box.completed else { return }
-                box.completed = true
-                connection.cancel()
-                continuation.resume(returning: available)
-            }
-            connection.stateUpdateHandler = { state in
-                switch state {
-                case .ready: finish(true)
-                case .failed, .cancelled: finish(false)
-                default: break
-                }
-            }
-            connection.start(queue: .global(qos: .utility))
-            DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 2) {
-                finish(false)
-            }
+        var request = URLRequest(url: backend.apiURL)
+        request.httpMethod = "GET"
+        request.timeoutInterval = 5
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.timeoutIntervalForRequest = 5
+        configuration.timeoutIntervalForResource = 8
+
+        do {
+            let (_, response) = try await URLSession(configuration: configuration).data(for: request)
+            return (response is HTTPURLResponse, "")
+        } catch {
+            NSLog("Triopathy availability check for %@ failed: %@", profile.rawValue, error.localizedDescription)
+            return (false, error.localizedDescription)
         }
     }
 
@@ -204,7 +200,10 @@ final class HermesService {
         case .openAIChat:
             let requestBody = ConversationRequest(
                 model: backend.model,
-                messages: [.init(role: "user", content: prompt)],
+                messages: [
+                    .init(role: "system", content: arithmeticSafetyInstruction),
+                    .init(role: "user", content: prompt),
+                ],
                 maxTokens: profile.triopathyOutputTokenLimit,
                 temperature: 0.75,
                 chatTemplateKwargs: ["enable_thinking": false]
@@ -213,7 +212,10 @@ final class HermesService {
         case .ollamaNativeChat:
             let requestBody = NativeOllamaConversationRequest(
                 model: backend.model,
-                messages: [.init(role: "user", content: prompt)],
+                messages: [
+                    .init(role: "system", content: arithmeticSafetyInstruction),
+                    .init(role: "user", content: prompt),
+                ],
                 stream: false,
                 think: false,
                 options: .init(temperature: 0.75, numPredict: profile.triopathyOutputTokenLimit)

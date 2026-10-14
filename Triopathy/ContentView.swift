@@ -22,12 +22,15 @@ struct ContentView: View {
                     .font(.largeTitle.weight(.bold))
                 Text("A conversation among your local Hermes profiles and optional ChatGPT plan")
                     .foregroundStyle(.secondary)
-                HStack(spacing: 8) {
-                    ForEach(viewModel.participants.indices, id: \.self) { participantIndex in
-                        let participant = viewModel.participants[participantIndex]
-                        participantBadge(participant, index: participantIndex)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(viewModel.participants.indices, id: \.self) { participantIndex in
+                            let participant = viewModel.participants[participantIndex]
+                            participantBadge(participant, index: participantIndex)
+                        }
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
             }
             Spacer()
             Text(viewModel.statusText)
@@ -42,14 +45,25 @@ struct ContentView: View {
 
     private func participantBadge(_ participant: Participant, index: Int) -> some View {
         HStack(spacing: 5) {
-            Circle().fill(viewModel.isAvailable(participant.name) ? color(for: participant.name) : .gray).frame(width: 8, height: 8)
-            Toggle(isOn: $viewModel.participants[index].isEnabled) {
-                Text(viewModel.speakerName(participant.name))
+            Circle()
+                .fill(viewModel.isAvailable(participant.name) ? color(for: participant.name) : .gray)
+                .frame(width: 8, height: 8)
+                .help(viewModel.isAvailable(participant.name) ? "Available" : "Offline")
+            Toggle("Include \(viewModel.speakerName(participant.name))", isOn: $viewModel.participants[index].isEnabled)
+                .labelsHidden()
+                .toggleStyle(.checkbox)
+                .controlSize(.mini)
+                .help("Include \(viewModel.speakerName(participant.name)) in the conversation")
+            Text(viewModel.speakerName(participant.name))
+                .lineLimit(1)
+                .fixedSize(horizontal: true, vertical: false)
+            if participant.isEnabled && viewModel.isAvailable(participant.name) {
+                Text("\(viewModel.counts[participant.name, default: 0])")
+                    .foregroundStyle(.secondary)
             }
-            Text(participant.isEnabled ? (viewModel.isAvailable(participant.name) ? "\(viewModel.counts[participant.name, default: 0])" : "Offline") : "Off")
-                .foregroundStyle(.secondary)
         }
         .font(.caption)
+        .fixedSize(horizontal: true, vertical: false)
         .padding(.horizontal, 9)
         .padding(.vertical, 5)
         .background((viewModel.isAvailable(participant.name) ? color(for: participant.name) : .gray).opacity(0.13))
@@ -161,7 +175,7 @@ struct ContentView: View {
                         .buttonStyle(.borderedProminent)
                         .tint(.red)
                 } else {
-                    Button("Begin Conversation") { viewModel.startConversation() }
+                    Button(viewModel.messages.isEmpty ? "Begin Conversation" : "Continue Conversation") { viewModel.startConversation() }
                         .buttonStyle(.borderedProminent)
                 }
             }

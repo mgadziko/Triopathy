@@ -97,6 +97,15 @@ await Test("all-offline run preserves previous transcript", async () => {
     var count = engine.Messages.Count; backend.Active = []; await engine.RunAsync("other", null, 1, default);
     Equal(count, engine.Messages.Count); True(!engine.LastRunStarted);
 });
+await Test("unchanged seed continues the session and changed seed starts fresh", async () => {
+    var backend = new FakeBackend { Active = ["local"] }; var engine = new ConversationEngine(backend);
+    await engine.RunAsync("seed", null, 1, default); var firstReply = engine.Messages.Single(m => m.Speaker == "local");
+    await engine.RunAsync("seed", null, 1, default);
+    True(engine.Messages.Any(m => m.Text.Contains("Continuing this session"))); True(backend.Prompts.Last().Contains(firstReply.Text));
+    await engine.RunAsync("new seed", null, 1, default);
+    True(!engine.Messages.Any(m => m.Text.Contains("Continuing this session"))); Equal(1, engine.Messages.Count(m => m.Speaker == "local"));
+    engine.Clear(); await engine.RunAsync("new seed", null, 1, default); True(!engine.Messages.Any(m => m.Text.Contains("Continuing this session")));
+});
 await Test("seed and round validation", async () => {
     var engine = new ConversationEngine(new FakeBackend()); await Throws(() => engine.RunAsync("", null, 1, default)); await Throws(() => engine.RunAsync("seed", null, 13, default));
 });

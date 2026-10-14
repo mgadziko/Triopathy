@@ -68,7 +68,9 @@ Open `Triopathy.xcodeproj` in Xcode, or build from Terminal:
 xcodebuild -project Triopathy.xcodeproj -scheme Triopathy -configuration Debug -destination 'platform=macOS,arch=arm64' CODE_SIGNING_ALLOWED=NO build
 ```
 
-The macOS app reads the named Hermes profiles' live provider, endpoint, and model selection before each turn. Enter a seed, choose the rounds, and click **Begin Conversation**. **File > Load Context Seed…** imports a UTF-8 `.txt` or `.json` document. **Save as JSON…** and **Save as TXT…** export the transcript.
+The macOS app reads the named Hermes profiles' live provider, endpoint, and model selection before each turn. Enter a seed, choose the rounds, and click **Begin Conversation**. Starting again with the same seed continues the visible session and supplies its recent turns as context; changing the seed or choosing **Clear** starts a fresh session. **File > Load Context Seed…** imports a UTF-8 `.txt` or `.json` document. **Save as JSON…** and **Save as TXT…** export the transcript.
+
+Allow Triopathy access in **System Settings > Privacy & Security > Local Network** when macOS asks, or the remote LAN participants will be skipped. For a development-signed bundle, keep the runnable copy outside a cloud-synced `dist` folder (for example, in `/Applications`): sync-provider metadata can invalidate a code signature after copying.
 
 ## ChatGPT / Codex
 
@@ -87,7 +89,7 @@ dotnet run --project windows/Triopathy.Tests -c Release
 dotnet build windows/Triopathy.Windows -c Release
 ```
 
-The suite contains 38 behavior tests covering configuration, request formats, conversation ordering, cancellation, transcript export, protected credentials, and the ChatGPT authorization flow. Additional WPF smoke checks cover bindings, layout, saved-connection reloads, and bundled network defaults.
+The suite contains 39 behavior tests covering configuration, request formats, conversation ordering, cancellation, transcript export, protected credentials, session continuity, and the ChatGPT authorization flow. Additional WPF smoke checks cover bindings, layout, saved-connection reloads, and bundled network defaults.
 
 After publishing, sample mode and an offscreen UI check are available:
 
@@ -103,3 +105,8 @@ These modes send no inference requests and do not change saved settings. For rea
 On either platform, expand **Web access**, enable it, and enter a search query or public page URLs. Triopathy gathers up to three sources before the first turn and shares their excerpts with every participant. Source links are shown in the transcript and Web access panel. The search query goes to DuckDuckGo; leaving both fields blank uses your seed as the query. Web access is off by default.
 
 This provides shared research for the conversation, rather than independent browsing by each model. Search may be blocked or throttled; direct page URLs remain available. See the [web access guide](windows/README.md#web-access-windows) for limits and testing.
+
+
+## Bundle identifier
+
+Triopathy retains its established `com.ricercar.Triopathy` identifier so that macOS privacy approvals and application-specific firewall rules continue to apply. Do not change it without planning a migration. New first-party app and extension targets should use the `net.quantumpenguin.*` namespace.
